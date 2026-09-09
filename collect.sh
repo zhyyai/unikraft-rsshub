@@ -57,6 +57,8 @@ copy_tree /etc/nsswitch.conf
 copy_tree /etc/ld.so.conf
 copy_tree /etc/ld.so.conf.d
 
+copy_file /usr/bin/polyfill.cjs
+
 real_ld=$(readlink -f /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
 mkdir -p "$ROOT/lib/x86_64-linux-gnu" "$ROOT/usr/lib/x86_64-linux-gnu" "$ROOT/lib64"
 cp -a "$real_ld" "$ROOT/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"

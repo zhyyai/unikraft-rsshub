@@ -9,13 +9,14 @@ RUN apt-get update \
       ca-certificates \
       curl \
       binutils \
- && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+ && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
  && apt-get install -y --no-install-recommends nodejs \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY --from=src /app /app
 
+COPY polyfill.cjs /usr/bin/polyfill.cjs
 COPY wrapper.sh /usr/bin/wrapper.sh
 COPY collect.sh /tmp/collect.sh
 RUN chmod +x /usr/bin/wrapper.sh /tmp/collect.sh \
