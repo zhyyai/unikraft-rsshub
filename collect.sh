@@ -100,43 +100,6 @@ if command -v ldconfig >/dev/null 2>&1; then
   ldconfig -r "$ROOT" 2>/dev/null || true
 fi
 
-# --- Aggressive size pruning to drastically fit under 1.0 GiB Harbor quota ---
-echo "Pruning large cache and non-runtime assets..."
-rm -rf "$ROOT/app/node_modules/.cache" 2>/dev/null || true
-rm -rf "$ROOT/app/.git" 2>/dev/null || true
-rm -rf "$ROOT/app/docs" "$ROOT/app/coverage" "$ROOT/app/scripts" 2>/dev/null || true
-
-# Prune documentation, sourcemaps, type definitions, and C/C++ source leftovers
-find "$ROOT" -type f \( \
-  -name "*.map" -o \
-  -name "*.d.ts" -o \
-  -name "*.md" -o \
-  -name "*.markdown" -o \
-  -name "*.txt" -o \
-  -name "LICENSE*" -o \
-  -name "LICENCE*" -o \
-  -name "CHANGELOG*" -o \
-  -name "README*" -o \
-  -name "*.c" -o \
-  -name "*.h" -o \
-  -name "*.cpp" -o \
-  -name "*.o" -o \
-  -name "*.gyp" -o \
-  -name "*.gypi" \
-\) -delete 2>/dev/null || true
-
-# Prune test and doc directories
-find "$ROOT" -type d \( \
-  -name "test" -o \
-  -name "tests" -o \
-  -name "__tests__" -o \
-  -name "docs" -o \
-  -name "example" -o \
-  -name "examples" -o \
-  -name ".github" -o \
-  -name "man" \
-\) -exec rm -rf {} + 2>/dev/null || true
-
 # Strip all binaries and shared libraries
 find "$ROOT" -type f 2>/dev/null | while read -r bin; do
   if file "$bin" 2>/dev/null | grep -q 'not stripped'; then
