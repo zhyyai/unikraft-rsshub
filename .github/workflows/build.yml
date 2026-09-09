@@ -1,0 +1,52 @@
+name: Build and Push RSSHub for Unikraft
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Delete old image to free storage quota
+        run: |
+          python -c "
+          import urllib.request, json
+          token = '${{ secrets.KRAFTCLOUD_TOKEN }}'
+          headers = {'Authorization': f'Bearer {token}', 'Accept': 'application/json'}
+          req = urllib.request.Request('https://api.fra.unikraft.cloud/v1/images', headers=headers, method='GET')
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  data = json.loads(resp.read().decode())
+                  for img in data.get('data', {}).get('images', []):
+                      if 'rsshub' in img.get('url', ''):
+                          del_req = urllib.request.Request(f\"https://api.fra.unikraft.cloud/v1/images/{img['uuid']}\", headers=headers, method='DELETE')
+                          urllib.request.urlopen(del_req)
+                          print(f\"Deleted old image {img['uuid']}\")
+          except Exception as e:
+              print(f'Warning: {e}')
+          "
+
+      - name: Log in to KraftCloud Registry
+        uses: docker/login-action@v3
+        with:
+          registry: unikraft.io
+          username: robot$boss.users.kraftcloud
+          password: ${{ secrets.KRAFTCLOUD_TOKEN }}
+
+      - name: Build and push container image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: unikraft.io/boss/rsshub:latest
+          provenance: false
