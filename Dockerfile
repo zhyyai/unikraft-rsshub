@@ -17,8 +17,8 @@ RUN apt-get update \
 WORKDIR /app
 COPY --from=src /app /app
 
-# 1. Strip non-x64 architectures and redundant packages
-RUN find /app/node_modules -maxdepth 4 -type d \( \
+# 1. Deep strip non-x64 platforms in pnpm store without depth limit
+RUN find /app/node_modules -type d \( \
       -name "*darwin*" -o \
       -name "*win32*" -o \
       -name "*arm64*" -o \
@@ -32,12 +32,13 @@ RUN find /app/node_modules -maxdepth 4 -type d \( \
       -name "*sunos*" \
     \) -exec rm -rf {} + 2>/dev/null || true
 
-# 2. Strip sources, caches, maps, and docs
+# 2. Strip sources, caches, maps, assets build and docs
 RUN rm -rf /app/node_modules/.cache \
            /app/.git \
            /app/docs \
            /app/coverage \
            /app/scripts \
+           /app/assets/build \
            /app/pnpm-lock.yaml \
            /app/tsconfig*.json \
            /app/.env* \

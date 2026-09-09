@@ -98,7 +98,24 @@ if command -v ldconfig >/dev/null 2>&1; then
   ldconfig -r "$ROOT" 2>/dev/null || true
 fi
 
-# Hard strip symbols to drastically reduce binary footprints
+# Additional aggressive cleanup inside /rootfs
+rm -rf "$ROOT/app/assets/build" 2>/dev/null || true
+rm -rf "$ROOT/app/assets"/*.json 2>/dev/null || true
+find "$ROOT/app/node_modules" -type d \( \
+  -name "*darwin*" -o \
+  -name "*win32*" -o \
+  -name "*arm64*" -o \
+  -name "*armv7*" -o \
+  -name "*armhf*" -o \
+  -name "*ppc64*" -o \
+  -name "*s390x*" -o \
+  -name "*riscv64*" -o \
+  -name "*android*" -o \
+  -name "*freebsd*" -o \
+  -name "*sunos*" \
+\) -exec rm -rf {} + 2>/dev/null || true
+
+# Hard strip symbols
 strip -s "$ROOT/usr/bin/node" 2>/dev/null || true
 find "$ROOT" -type f -name "*.so*" -exec strip -s {} + 2>/dev/null || true
 find "$ROOT/app" -type f -name "*.node" -exec strip -s {} + 2>/dev/null || true
