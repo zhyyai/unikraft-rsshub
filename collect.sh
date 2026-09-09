@@ -98,6 +98,32 @@ if command -v ldconfig >/dev/null 2>&1; then
   ldconfig -r "$ROOT" 2>/dev/null || true
 fi
 
-echo "=== rootfs size ==="
+# --- Aggressive size pruning to satisfy KraftCloud 1.0 GiB storage quota ---
+echo "Pruning non-runtime assets from /rootfs/app..."
+find "$ROOT/app" -type f \( \
+  -name "*.map" -o \
+  -name "*.d.ts" -o \
+  -name "*.md" -o \
+  -name "*.markdown" -o \
+  -name "*.txt" -o \
+  -name "LICENSE*" -o \
+  -name "CHANGELOG*" \
+\) -delete 2>/dev/null || true
+
+find "$ROOT/app" -type d \( \
+  -name "test" -o \
+  -name "tests" -o \
+  -name "__tests__" -o \
+  -name "docs" -o \
+  -name "example" -o \
+  -name "examples" \
+\) -exec rm -rf {} + 2>/dev/null || true
+
+# Strip node binary
+if [ -f "$ROOT/usr/bin/node" ]; then
+  strip --strip-unneeded "$ROOT/usr/bin/node" 2>/dev/null || true
+fi
+
+echo "=== Pruned rootfs size ==="
 du -sh "$ROOT"
 ls -l "$ROOT/lib64/ld-linux-x86-64.so.2"
