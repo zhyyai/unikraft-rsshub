@@ -46,8 +46,6 @@ copy_bin_deps() {
 
 copy_tree /app
 copy_tree /etc/ssl
-copy_tree /etc/ca-certificates
-copy_tree /usr/share/ca-certificates
 copy_tree /etc/os-release
 copy_tree /usr/lib/os-release
 copy_tree /etc/passwd
@@ -100,14 +98,14 @@ if command -v ldconfig >/dev/null 2>&1; then
   ldconfig -r "$ROOT" 2>/dev/null || true
 fi
 
-# Strip all binaries and shared libraries
-find "$ROOT" -type f 2>/dev/null | while read -r bin; do
-  if file "$bin" 2>/dev/null | grep -q 'not stripped'; then
-    strip --strip-unneeded "$bin" 2>/dev/null || true
-  fi
-done
+# Hard strip symbols to drastically reduce binary footprints
+strip -s "$ROOT/usr/bin/node" 2>/dev/null || true
+find "$ROOT" -type f -name "*.so*" -exec strip -s {} + 2>/dev/null || true
+find "$ROOT/app" -type f -name "*.node" -exec strip -s {} + 2>/dev/null || true
+
+echo "=== Top 10 largest items in /rootfs ==="
+du -h -d 2 "$ROOT" 2>/dev/null | sort -hr | head -n 10 || true
 
 echo "=== Final Pruned rootfs size ==="
 du -sh "$ROOT"
-du -sh "$ROOT/app"
 ls -lh "$ROOT/usr/bin/node"

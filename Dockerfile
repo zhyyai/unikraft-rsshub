@@ -17,7 +17,22 @@ RUN apt-get update \
 WORKDIR /app
 COPY --from=src /app /app
 
-# Drastic pre-pruning on /app to shrink from 139M to <70M
+# 1. Strip non-x64 architectures and redundant packages
+RUN find /app/node_modules -maxdepth 4 -type d \( \
+      -name "*darwin*" -o \
+      -name "*win32*" -o \
+      -name "*arm64*" -o \
+      -name "*armv7*" -o \
+      -name "*armhf*" -o \
+      -name "*ppc64*" -o \
+      -name "*s390x*" -o \
+      -name "*riscv64*" -o \
+      -name "*android*" -o \
+      -name "*freebsd*" -o \
+      -name "*sunos*" \
+    \) -exec rm -rf {} + 2>/dev/null || true
+
+# 2. Strip sources, caches, maps, and docs
 RUN rm -rf /app/node_modules/.cache \
            /app/.git \
            /app/docs \
